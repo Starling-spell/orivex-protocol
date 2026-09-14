@@ -1,6 +1,6 @@
 # Orivex Protocol
 
-Frontend MVP for **Proof of Intelligent Action**. The existing landing page now uses a Vite/React wallet integration with Privy and viem on Base Sepolia (84532). Open it through the development server, not directly from disk.
+Frontend MVP for **Proof of Intelligent Action**. The landing page uses a Vite/React GenLayer StudioNet agent lab. Open it through the development server, not directly from disk.
 
 ## Included
 
@@ -12,7 +12,7 @@ Frontend MVP for **Proof of Intelligent Action**. The existing landing page now 
 - Reputation score and live trust graph visualization
 - Developer API example and register-agent modal
 - Privy wallet/email authentication, embedded wallets, wallet selection and logout
-- Base Sepolia network switching and real agent registration with receipt tracking
+- GenLayer StudioNet agent verification with finalized consensus receipts
 - Atomic deployment of all four protocol contracts from the connected wallet
 
 ## Run

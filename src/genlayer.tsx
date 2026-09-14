@@ -4,8 +4,7 @@ import { createClient } from 'genlayer-js';
 import { studionet } from 'genlayer-js/chains';
 import { TransactionStatus, type Hash } from 'genlayer-js/types';
 import { canonicalProof, validateProof, validateReceipt, type Proof } from './proof';
-import { cliPayload } from './cli';
-import { proofIdFromReceipt, studioError, studioWriter, txHash } from './studio';
+import { proofIdFromReceipt, studioError, studioWalletWriter, txHash } from './studio';
 import manifest from '../deployments/genlayer-studionet.json';
 import './genlayer.css';
 
@@ -19,7 +18,6 @@ const hash = async (value: string) => Array.from(new Uint8Array(await crypto.sub
 function AgentLab() {
   const [manual, setManual] = useState({ reference: '', claim: '', criterion: '', url: '', digest: '' });
   const [manualDigesting, setManualDigesting] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [lookupId, setLookupId] = useState('');
   const [lookingUp, setLookingUp] = useState(false);
@@ -111,25 +109,17 @@ function AgentLab() {
   async function digestEvidence() {
     if (!manual.url) return;
     setManualDigesting(true); setError('');
-    try { const response = await fetch(manual.url); if (!response.ok) throw new Error(`Evidence returned HTTP ${response.status}`); const bytes = new Uint8Array(await response.arrayBuffer()); const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), byte => byte.toString(16).padStart(2, '0')).join(''); setManual(value => ({ ...value, digest })); setCopied(false); setMessage('Evidence digest calculated. Verify on StudioNet to submit the claim and show the validator judgment here.'); }
+    try { const response = await fetch(manual.url); if (!response.ok) throw new Error(`Evidence returned HTTP ${response.status}`); const bytes = new Uint8Array(await response.arrayBuffer()); const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), byte => byte.toString(16).padStart(2, '0')).join(''); setManual(value => ({ ...value, digest })); setMessage('Evidence digest calculated. Click Verify and approve the wallet transactions. The judgment will appear here.'); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not fetch evidence.'); }
     finally { setManualDigesting(false); }
   }
   const manualReady = Object.values(manual).every(Boolean);
-  const cli = cliPayload(address, manual);
-  async function copyCli() {
-    if (!manualReady) { setError('Fill every field and hash the evidence first.'); return; }
-    try {
-      await navigator.clipboard.writeText(cli);
-      setCopied(true); setError(''); setMessage('CLI payload copied. Prefer Verify on StudioNet so the judgment stays in this page.');
-    } catch { setCopied(false); setError('Clipboard unavailable. Copy the commands from the optional CLI details.'); }
-  }
   async function verifyOnchain() {
-    if (!manualReady) { setError('Fill every field and hash the evidence before verifying on StudioNet.'); return; }
+    if (!manualReady) { setError('Fill every field and hash the evidence before verifying.'); return; }
     setVerifying(true); setError('');
     try {
-      const { account, client: writer } = studioWriter();
-      setMessage(`Submitting the claim from ${account.address}…`);
+      const { account, client: writer } = await studioWalletWriter();
+      setMessage(`Approve the submit transaction in your wallet (${account.slice(0, 6)}…${account.slice(-4)})…`);
       const submitTx = txHash(await writer.writeContract({
         address, functionName: 'submit_proof', value: 0n, leaderOnly: false,
         args: [manual.reference, manual.claim, manual.criterion, manual.url, manual.digest.toLowerCase()],
@@ -138,12 +128,12 @@ function AgentLab() {
       const submitted = await writer.waitForTransactionReceipt({ hash: submitTx, status: TransactionStatus.FINALIZED, interval: 4000, retries: 80 });
       const id = proofIdFromReceipt(submitted);
       setLookupId(String(id));
-      setMessage(`Proof #${id} is on-chain. Validators are fetching evidence and voting…`);
+      setMessage(`Proof #${id} submitted. Approve the verify transaction in your wallet. Validators will then fetch evidence and vote…`);
       const verifyTx = txHash(await writer.writeContract({
         address, functionName: 'verify_proof', args: [id], value: 0n, leaderOnly: false,
       }));
       const verified = await writer.waitForTransactionReceipt({ hash: verifyTx, status: TransactionStatus.FINALIZED, interval: 5000, retries: 80 });
-      validateReceipt(verified, address, account.address);
+      validateReceipt(verified, address, account);
       const raw = await client.readContract({ address, functionName: 'get_proof', args: [id] });
       const live: Proof = JSON.parse(String(raw));
       validateProof(live, address, id);
@@ -166,10 +156,9 @@ function AgentLab() {
     <div className="lab-heading"><div><p>GenLayer StudioNet · Chain 61999</p><h2>Inspect an agent’s claim.</h2></div><a href="/docs/guide.html">Hackathon guide ↗</a></div>
     <p>Executable research and review agents submit claims against pinned public evidence. An intelligent contract records the validator-agreed judgment.</p>
     <div className="lab-actions"><button className="btn btn-primary" disabled={loading || checking} onClick={loadExamples}>{loading ? 'Loading receipts…' : 'Load agent examples'}</button><a className="btn btn-ghost" href="https://studio.genlayer.com" target="_blank" rel="noreferrer">Open GenLayer Studio ↗</a></div>
-    <section className="manual-proof card"><h3>Verify an agent manually</h3><p>Enter an externally acquired claim and immutable evidence. This page submits the proof to StudioNet, waits for validator consensus, and shows SUCCESS, FAILED, or INCONCLUSIVE here.</p><div className="manual-grid"><label>Reference ID<input value={manual.reference} onChange={event => { setCopied(false); setManual({ ...manual, reference: event.target.value }); }} placeholder="agent-run-001" /></label><label>Claim<input value={manual.claim} onChange={event => setManual({ ...manual, claim: event.target.value })} placeholder="Agent completed the audit" /></label><label>Criterion<textarea value={manual.criterion} onChange={event => setManual({ ...manual, criterion: event.target.value })} placeholder="Evidence must show the completed audit and its result" /></label><label>Evidence URL<input value={manual.url} onChange={event => setManual({ ...manual, url: event.target.value })} placeholder="https://raw.githubusercontent.com/..." /></label><label>Evidence SHA-256<input value={manual.digest} onChange={event => setManual({ ...manual, digest: event.target.value })} placeholder="64 hex characters" /></label></div><div className="lab-actions"><button className="btn btn-ghost" disabled={!manual.url || manualDigesting || verifying} onClick={digestEvidence}>{manualDigesting ? 'Fetching evidence…' : 'Fetch and hash evidence'}</button><button className="btn btn-primary" disabled={!manualReady || verifying} onClick={verifyOnchain}>{verifying ? 'Verifying on StudioNet…' : 'Verify on StudioNet'}</button></div>
-      <p className="lab-message" role="status">{verifying || message.includes('judged') || message.includes('did not finish') ? message : 'Hash the evidence, then verify on StudioNet. The validator judgment appears in the result panel after consensus — you do not leave this page.'}</p>
+    <section className="manual-proof card"><h3>Verify an agent manually</h3><p>Enter an externally acquired claim and immutable evidence. This page submits the proof to StudioNet, waits for validator consensus, and shows SUCCESS, FAILED, or INCONCLUSIVE here.</p><div className="manual-grid"><label>Reference ID<input value={manual.reference} onChange={event => setManual({ ...manual, reference: event.target.value })} placeholder="agent-run-001" /></label><label>Claim<input value={manual.claim} onChange={event => setManual({ ...manual, claim: event.target.value })} placeholder="Agent completed the audit" /></label><label>Criterion<textarea value={manual.criterion} onChange={event => setManual({ ...manual, criterion: event.target.value })} placeholder="Evidence must show the completed audit and its result" /></label><label>Evidence URL<input value={manual.url} onChange={event => setManual({ ...manual, url: event.target.value })} placeholder="https://raw.githubusercontent.com/..." /></label><label>Evidence SHA-256<input value={manual.digest} onChange={event => setManual({ ...manual, digest: event.target.value })} placeholder="64 hex characters" /></label></div><div className="lab-actions"><button className="btn btn-ghost" disabled={!manual.url || manualDigesting || verifying} onClick={digestEvidence}>{manualDigesting ? 'Fetching evidence…' : 'Fetch and hash evidence'}</button><button className="btn btn-primary" disabled={!manualReady || verifying} onClick={verifyOnchain}>{verifying ? 'Waiting for wallet…' : 'Verify'}</button></div>
+      <p className="lab-message" role="status">{verifying || message.includes('judged') || message.includes('did not finish') || message.includes('wallet') ? message : 'Hash the evidence, then click Verify. Approve the wallet transactions. The validator judgment appears in this page after consensus.'}</p>
       {error && <p className="lab-error" role="alert">{error}</p>}
-      <details className="cli-payload"><summary>Optional CLI commands</summary><button className="btn btn-ghost" disabled={!manualReady} onClick={copyCli}>{copied ? 'Copied CLI payload' : 'Copy CLI payload'}</button>{manualReady ? <pre><code>{cli}</code></pre> : <p>Fill the form to generate CLI commands. The on-chain button above is the supported path.</p>}</details>
       <div className="lab-actions lookup-row"><label>Onchain proof ID<input value={lookupId} onChange={event => setLookupId(event.target.value)} placeholder="7" inputMode="numeric" /></label><button className="btn btn-primary" disabled={lookingUp || checking || verifying || !lookupId.trim()} onClick={lookupProof}>{lookingUp ? 'Looking up…' : 'Look up proof'}</button></div></section>
     <div className="lab-layout"><div className="lab-list" aria-label="Agent examples">{examples.map(item => <button key={item.id} aria-pressed={entry.id === item.id} disabled={checking} onClick={() => { setSelected(item.id); setError(''); setMessage('Saved receipt. Recheck to read StudioNet now.'); }}><strong>{item.name}</strong><span>{item.capability}</span><small>{item.proof?.status ?? 'PENDING'} · #{item.proofId}</small></button>)}</div>
       <article className="lab-proof" id="lab-result"><div className="lab-proof-title"><h3>{entry.name}</h3><span className={`proof-status status-${proof?.status.toLowerCase()}`}>{proof?.status ?? 'PENDING'}</span></div>
@@ -187,7 +176,7 @@ function AgentLab() {
         <button className="btn btn-primary" disabled={checking || loading || verifying || !proof} onClick={recheck}>{checking ? 'Checking StudioNet…' : 'Recheck onchain'}</button>
         <p className="lab-message" role="status">{message}</p>{error && <p className="lab-error" role="alert">{error}</p>}
       </article></div>
-    <details><summary>Run these agents from the CLI</summary><pre><code>npm run genlayer:studio{'\n'}npx --no-install genlayer account use studio-proof-deployer{'\n'}npm run genlayer:examples{'\n'}npm run genlayer:check{'\n'}npm run genlayer:publish</code></pre><p>Examples use the same operator wallet. Agent names describe local programs, not independently authenticated identities. The judgment covers the claim and evidence only. Base certificates and reputation are separate prototypes.</p></details>
+    <p className="lab-footnote">Agent names describe local programs, not independently authenticated identities. The on-chain judgment covers the claim and evidence only.</p>
   </div>;
 }
 

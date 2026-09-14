@@ -104,6 +104,16 @@ export function WalletApp() {
     const timeout = setTimeout(() => setInitializationSlow(true), 15_000);
     return () => clearTimeout(timeout);
   }, [available]);
+  useEffect(() => {
+    window.__orivexGetWallet = async () => {
+      if (!authenticated || !wallet) {
+        if (authenticated) connectWallet(); else login();
+        throw new Error('Connect a wallet first, then click Verify.');
+      }
+      return { address: getAddress(wallet.address), provider: await wallet.getEthereumProvider() };
+    };
+    return () => { delete window.__orivexGetWallet; };
+  }, [authenticated, wallet, login, connectWallet]);
 
   const registration = useTransaction(`orivex:register:${chain.id}:${account}:${registry}`, async receipt => {
     for (const log of receipt.logs) {

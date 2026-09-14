@@ -1,22 +1,31 @@
-import { createAccount, createClient, generatePrivateKey } from 'genlayer-js';
+import { createClient } from 'genlayer-js';
 import { studionet } from 'genlayer-js/chains';
 import type { Hash } from 'genlayer-js/types';
 
-const storageKey = 'orivex:studionet-key';
+type EthereumProvider = { request(args: { method: string; params?: unknown[] }): Promise<unknown> };
+type WalletHandle = { address: string; provider: EthereumProvider };
 
-export function studioAccount() {
-  let key = '';
-  try { key = localStorage.getItem(storageKey) ?? ''; } catch { /* Private browsing may disable storage. */ }
-  if (!/^0x[0-9a-fA-F]{64}$/.test(key)) {
-    key = generatePrivateKey();
-    try { localStorage.setItem(storageKey, key); } catch { /* The in-memory key still signs this session. */ }
+declare global {
+  interface Window {
+    ethereum?: EthereumProvider;
+    __orivexGetWallet?: () => Promise<WalletHandle>;
   }
-  return createAccount(key as Hash);
 }
 
-export function studioWriter() {
-  const account = studioAccount();
-  return { account, client: createClient({ chain: studionet, account }) };
+export async function studioWalletWriter() {
+  const hooked = typeof window !== 'undefined' ? window.__orivexGetWallet : undefined;
+  let handle: WalletHandle | undefined;
+  if (hooked) handle = await hooked();
+  if (!handle) {
+    const provider = typeof window !== 'undefined' ? window.ethereum : undefined;
+    if (!provider?.request) throw new Error('Connect a wallet first, then click Verify.');
+    const accounts = await provider.request({ method: 'eth_requestAccounts' }) as string[];
+    if (!accounts?.[0]) throw new Error('Connect a wallet first, then click Verify.');
+    handle = { address: accounts[0], provider };
+  }
+  const client = createClient({ chain: studionet, account: handle.address as `0x${string}`, provider: handle.provider });
+  try { await client.connect('studionet'); } catch { /* Wallet may already be on StudioNet or will prompt on the first transaction. */ }
+  return { account: handle.address, client };
 }
 
 export function txHash(value: unknown): Hash {
@@ -45,5 +54,7 @@ export function studioError(error: unknown): string {
   if (/429|32429|rate/i.test(text)) return 'StudioNet rate limit hit. Wait a minute, then verify again.';
   if (/32028|in-flight/i.test(text)) return 'Too many pending StudioNet transactions. Wait for the previous proof to finish.';
   if (/did not return a (transaction hash|proof ID)/i.test(text)) return text;
+  if (/Connect a wallet/i.test(text)) return 'Connect a wallet first, then click Verify.';
+  if (/4001|UserRejected|denied|rejected/i.test(text)) return 'Wallet request declined. Approve the StudioNet transaction to verify.';
   return 'StudioNet could not finish verification. Check the evidence URL and try again.';
 }

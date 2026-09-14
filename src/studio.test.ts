@@ -14,5 +14,6 @@ it('extracts a transaction hash from writeContract return values', () => {
 
 it('maps StudioNet errors without exposing RPC internals', () => {
   expect(studioError(new Error('[EXPECTED] reference already submitted'))).toContain('new reference');
+  expect(studioError(new Error('User rejected the request'))).toContain('Wallet request declined');
   expect(studioError({ shortMessage: '0xdeadbeef' })).not.toContain('0xdeadbeef');
 });

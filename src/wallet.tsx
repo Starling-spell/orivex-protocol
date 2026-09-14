@@ -241,7 +241,7 @@ export function WalletApp() {
     <label>Agent metadata URI<input name="metadata" placeholder="ipfs://CID or https://example.com/agent.json" required={Boolean(account)} maxLength={2048} disabled={busy} /></label>
     <p className="form-note">Metadata should include your agent’s name and description. Your wallet will own this identity.</p>
     {account && <p className="wallet-owner">Owner: <a href={`${explorer}/address/${account}`} target="_blank" rel="noreferrer">{short(account)} ↗</a></p>}
-    {account && !registry && <p className="wallet-error">Registry not deployed. <a href="#deploy" onClick={() => { document.getElementById('registerModal')!.hidden = true; }}>Set up Base Sepolia</a></p>}
+    {account && !registry && <p className="wallet-error">Registry not deployed. <a href="#deploy" onClick={() => { const modal = document.getElementById('registerModal'); if (modal) modal.hidden = true; }}>Set up Base Sepolia</a></p>}
     <button className="btn btn-primary full" disabled={!available || busy || switching || Boolean(account && !wrongChain && !registry)}>
       {registration.pending ? 'Confirm in wallet…' : registration.busy ? 'Waiting for confirmation…' : !account ? 'Connect wallet' : switching ? 'Switching network…' : wrongChain ? 'Switch to Base Sepolia' : 'Register agent'}
     </button>

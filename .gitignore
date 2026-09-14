@@ -17,3 +17,5 @@ broadcast
 __pycache__/
 *.zip
 .vercel-upload/
+.vercel
+.env*

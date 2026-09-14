@@ -1,0 +1,201 @@
+{
+  "address": "0xd8571C4605C3Fb63B02b75614a53d753656e66a1",
+  "chainId": 61999,
+  "examples": [
+    {
+      "id": "license-scout",
+      "name": "License Scout",
+      "capability": "License research",
+      "expected": "SUCCESS",
+      "inputHash": "3fabb132e9d85e5119ae9ee84e12781e62a689ac29b585f1c787ca51a7a1c36b",
+      "submitTx": "0xc70168f3a5a4231125edcdcc548d209a544fa8fbc864e40fc2eeb7fe6e6bcc2a",
+      "proofId": 2,
+      "verifyTx": "0x38b56c560e9de4a500399a5be1d76b90018dbcd71b5e01b6896a28065c65cccd",
+      "proof": {
+        "chain_id": 61999,
+        "claim": "The license permits software redistribution subject to retaining its copyright and permission notices.",
+        "contract_address": "0xd8571C4605C3Fb63B02b75614a53d753656e66a1",
+        "criterion": "Check the document for an explicit permission to distribute and an obligation to retain copyright and permission notices. Refutation means FAILED; missing information means INCONCLUSIVE.",
+        "domain": "orivex.evidence-proof.v2",
+        "evidence_sha256": "13cd784a6c31361f0e0c6aa3b410a1cb9a079868b7314c13e3eb8a75351746b9",
+        "evidence_url": "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/LICENSE",
+        "proof_hash": "c6aabfe806761c14792d7d9156757dd41b079ee97486977dc4f3be5e66505c5e",
+        "proof_id": 2,
+        "reference_id": "orivex:agent:license-scout:v1",
+        "schema_version": 2,
+        "status": "SUCCESS",
+        "submitter": "0x7a413BB4AB62E31d62d4cD9efC8C8a8Dae37FB42"
+      },
+      "consensus": {
+        "status": "FINALIZED",
+        "result": "MAJORITY_AGREE",
+        "votes": {
+          "0x4404Fb70d490c935758146f42A73DC850FF95C71": "agree",
+          "0x772ffCd1dF6Cc566eC4b8d3f4F4f8eBbb6B36C84": "agree",
+          "0x90402341F0B0e97b23023c0a87de957FB7148E0F": "idle",
+          "0xacc2459F341D7a887bcA8FAA62F1EC9378d4Bc67": "idle",
+          "0xec2Fb79cd12255Eb34886CEd7332f27B98DEe658": "agree"
+        },
+        "leaderOnly": false
+      },
+      "checkedAt": "2026-09-14T05:33:10.538Z",
+      "matchesExpectation": true
+    },
+    {
+      "id": "ownership-reviewer",
+      "name": "Ownership Reviewer",
+      "capability": "Source review",
+      "expected": "SUCCESS",
+      "inputHash": "40f91bfb8ec10b613a4054b970b754a3e90d8cf0d8ada1a9bc911d9e8a4a4712",
+      "submitTx": "0x1ca9ef506c5f322e994e735bb9fcc866a1d46c9aefbfd379c246ec20fd701033",
+      "proofId": 3,
+      "verifyTx": "0xdcfea849bffe973e59a5aa8003cd0a719e7f4d4b74e2330b96f00de9e256ac7b",
+      "proof": {
+        "chain_id": 61999,
+        "claim": "The transferOwnership function can only be called by the current owner and rejects the zero address as its new owner.",
+        "contract_address": "0xd8571C4605C3Fb63B02b75614a53d753656e66a1",
+        "criterion": "Assess only the supplied source. SUCCESS if transferOwnership is restricted to the current owner and rejects a zero newOwner; FAILED if contradicted; INCONCLUSIVE if either behavior cannot be established. This is not a complete security audit.",
+        "domain": "orivex.evidence-proof.v2",
+        "evidence_sha256": "38578bd71c0a909840e67202db527cc6b4e6b437e0f39f0c909da32c1e30cb81",
+        "evidence_url": "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/contracts/access/Ownable.sol",
+        "proof_hash": "8533269c037df1480a1cdf8cd617e387099fa6a1b0e9847874c1c790163228aa",
+        "proof_id": 3,
+        "reference_id": "orivex:agent:ownership-reviewer:v1",
+        "schema_version": 2,
+        "status": "SUCCESS",
+        "submitter": "0x7a413BB4AB62E31d62d4cD9efC8C8a8Dae37FB42"
+      },
+      "consensus": {
+        "status": "FINALIZED",
+        "result": "MAJORITY_AGREE",
+        "votes": {
+          "0x4404Fb70d490c935758146f42A73DC850FF95C71": "agree",
+          "0x4aba638Cf0Cf5249437AaD968fC69dde46ae6BAC": "idle",
+          "0x5310dcF075E0BD47d29B8ec6581F736C767f54D2": "agree",
+          "0x772ffCd1dF6Cc566eC4b8d3f4F4f8eBbb6B36C84": "agree",
+          "0xcE1d6bBB36B744536153966B4DD42276f5ADd0F8": "idle"
+        },
+        "leaderOnly": false
+      },
+      "checkedAt": "2026-09-14T05:33:34.630Z",
+      "matchesExpectation": true
+    },
+    {
+      "id": "release-inspector",
+      "name": "Release Inspector",
+      "capability": "Release analysis",
+      "expected": "SUCCESS",
+      "inputHash": "a88a0055f12a174d2ac62a1dae611c4dd286af3dd60751bd2b2818ecf2ae3c61",
+      "submitTx": "0x372abb6316e72eb4426b38da244c4aec0af1e9b6d3c0c1e1c3c815e64bca1bb7",
+      "proofId": 4,
+      "verifyTx": "0x81d50dd3434abb533dc2a84afb06f63569f8dba6f09c1ff50755e4c42015407c",
+      "proof": {
+        "chain_id": 61999,
+        "claim": "The package manifest declares name openzeppelin-solidity, version 5.4.0, and license MIT.",
+        "contract_address": "0xd8571C4605C3Fb63B02b75614a53d753656e66a1",
+        "criterion": "Compare the claim to the package.json name, version and license fields. SUCCESS if all match, FAILED if any conflict, INCONCLUSIVE if a required field is missing. Do not infer published or installed package authenticity.",
+        "domain": "orivex.evidence-proof.v2",
+        "evidence_sha256": "9623b9e2f7fec73a3b6b30fd1d843b17338be5107750e735a3dec375337af7ef",
+        "evidence_url": "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/package.json",
+        "proof_hash": "47514f7ee556f94c493ab4c1654bdcf5734c294987dfe99574bc4369e456b3ae",
+        "proof_id": 4,
+        "reference_id": "orivex:agent:release-inspector:v1",
+        "schema_version": 2,
+        "status": "SUCCESS",
+        "submitter": "0x7a413BB4AB62E31d62d4cD9efC8C8a8Dae37FB42"
+      },
+      "consensus": {
+        "status": "FINALIZED",
+        "result": "MAJORITY_AGREE",
+        "votes": {
+          "0x14402D49f317CE1a2F35BAE01b1804A2A9703dCb": "agree",
+          "0x76c25AFC12c75485703cCFfd0083AA6201455B25": "agree",
+          "0x90402341F0B0e97b23023c0a87de957FB7148E0F": "idle",
+          "0x9ea87b28DcA2F79fe108CF06a4c13B4c876AC23d": "agree",
+          "0xBBb165E4c9d73a1493D363280f7067Cd07891dBE": "idle"
+        },
+        "leaderOnly": false
+      },
+      "checkedAt": "2026-09-14T05:35:55.668Z",
+      "matchesExpectation": true
+    },
+    {
+      "id": "false-claim-control",
+      "name": "False Claim Control",
+      "capability": "Negative control",
+      "expected": "FAILED",
+      "inputHash": "0e68c37c34bd0b77fa4f2767f9a29d6d659cd1682c908fb45b0ee056630eb086",
+      "submitTx": "0x3226ec0a9e68a397555e97ad7a784ec49e903962840f6b808d56447153d997fd",
+      "proofId": 5,
+      "verifyTx": "0x5856771c817d14be9968c864e5ee5e9acf8a55471863c256c1e1395d2b3d271a",
+      "proof": {
+        "chain_id": 61999,
+        "claim": "The supplied license explicitly prohibits selling copies of the software.",
+        "contract_address": "0xd8571C4605C3Fb63B02b75614a53d753656e66a1",
+        "criterion": "Assess whether this license explicitly forbids selling the software. An explicit permission to sell refutes that claim and means FAILED. Missing relevant language means INCONCLUSIVE.",
+        "domain": "orivex.evidence-proof.v2",
+        "evidence_sha256": "13cd784a6c31361f0e0c6aa3b410a1cb9a079868b7314c13e3eb8a75351746b9",
+        "evidence_url": "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/LICENSE",
+        "proof_hash": "f502a8440176456af3f88ad73f69596fcfce0fb0a3a67324c7bdd8e7af1d0696",
+        "proof_id": 5,
+        "reference_id": "orivex:agent:false-claim-control:v1",
+        "schema_version": 2,
+        "status": "FAILED",
+        "submitter": "0x7a413BB4AB62E31d62d4cD9efC8C8a8Dae37FB42"
+      },
+      "consensus": {
+        "status": "FINALIZED",
+        "result": "MAJORITY_AGREE",
+        "votes": {
+          "0x4404Fb70d490c935758146f42A73DC850FF95C71": "idle",
+          "0x4aba638Cf0Cf5249437AaD968fC69dde46ae6BAC": "agree",
+          "0x6737ca1d6BDF8b7C4f19143E2D55581Ca64eb7C3": "agree",
+          "0x76c25AFC12c75485703cCFfd0083AA6201455B25": "agree",
+          "0x9ea87b28DcA2F79fe108CF06a4c13B4c876AC23d": "idle"
+        },
+        "leaderOnly": false
+      },
+      "checkedAt": "2026-09-14T05:38:29.233Z",
+      "matchesExpectation": true
+    },
+    {
+      "id": "provenance-control",
+      "name": "Provenance Control",
+      "capability": "Evidence sufficiency",
+      "expected": "INCONCLUSIVE",
+      "inputHash": "638c35d02c743bba38cc56c884d8783cd8b0b02eb72478b309c45f00f47377ae",
+      "submitTx": "0x9b4fe86bd101f7248d36ee58ccb4144977a05ff6801d62642a04fa6d53bccfea",
+      "proofId": 6,
+      "verifyTx": "0xda08ca84c2b614020a8217a8a367950778ebaf9503fcaf0135dfab7a6eba8181",
+      "proof": {
+        "chain_id": 61999,
+        "claim": "Orivex Audit Agent completed a full security audit of this software on 2026-09-13.",
+        "contract_address": "0xd8571C4605C3Fb63B02b75614a53d753656e66a1",
+        "criterion": "SUCCESS requires evidence of the named agent executing that audit on the named date. FAILED requires evidence refuting it. A software license alone does not establish who audited the code or when; absent evidence means INCONCLUSIVE.",
+        "domain": "orivex.evidence-proof.v2",
+        "evidence_sha256": "13cd784a6c31361f0e0c6aa3b410a1cb9a079868b7314c13e3eb8a75351746b9",
+        "evidence_url": "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/LICENSE",
+        "proof_hash": "c79ae8df359a3a4e4fdabb04fcb494963ff26b4b6e1bc21e5546e7ce3490e697",
+        "proof_id": 6,
+        "reference_id": "orivex:agent:provenance-control:v1",
+        "schema_version": 2,
+        "status": "INCONCLUSIVE",
+        "submitter": "0x7a413BB4AB62E31d62d4cD9efC8C8a8Dae37FB42"
+      },
+      "consensus": {
+        "status": "FINALIZED",
+        "result": "MAJORITY_AGREE",
+        "votes": {
+          "0x3D83ab507785b95ca5C208bEc80CCe3D5ca98100": "idle",
+          "0x3E5ee2507cc167C9925Bf10c67D7986581112024": "agree",
+          "0x4aba638Cf0Cf5249437AaD968fC69dde46ae6BAC": "agree",
+          "0x90402341F0B0e97b23023c0a87de957FB7148E0F": "idle",
+          "0xec2Fb79cd12255Eb34886CEd7332f27B98DEe658": "agree"
+        },
+        "leaderOnly": false
+      },
+      "checkedAt": "2026-09-14T05:40:54.239Z",
+      "matchesExpectation": true
+    }
+  ]
+}

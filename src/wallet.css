@@ -1,0 +1,31 @@
+:root { color-scheme: dark; --bg: #05070c; --surface: #0c111b; --line: #28303e; --muted: #a1adc3; }
+[hidden] { display: none !important; }
+.modal-backdrop { z-index: 20; }
+.modal { max-height: 90dvh; overflow-y: auto; }
+.wallet-area { position: relative; display: flex; gap: 12px; align-items: center; }
+.wallet-btn, .wallet-menu button, .wallet-menu select { min-height: 44px; }
+.network-label { font: 11px var(--mono); color: #a9b9db; }
+.wallet-menu { position: absolute; right: 0; top: 54px; width: 270px; padding: 18px; background: #101622; border: 1px solid #394358; border-radius: 8px; display: grid; gap: 12px; }
+.wallet-menu strong { font-size: 13px; }
+.wallet-menu button, .wallet-menu select { color: var(--text); background: #181f2c; border: 1px solid #394358; border-radius: 4px; padding: 8px; text-align: left; }
+.wallet-menu a, .wallet-owner a, .transaction-status a, .deployment-panel a { color: #9abaff; }
+.wallet-menu a, .wallet-owner, .transaction-status, .deployment-panel { font-size: 12px; line-height: 1.7; }
+.wallet-error { color: #ffc2b7 !important; font-size: 12px; line-height: 1.6; }
+.wallet-error a { color: inherit; text-decoration: underline; }
+.wallet-success { color: #81e0b7 !important; }
+.transaction-status p { margin: 10px 0; }
+.transaction-status { overflow-wrap: anywhere; }
+.deployment-panel { scroll-margin-top: 100px; margin-top: 42px; padding: 28px 0; border-top: 1px solid var(--line); }
+.deployment-panel h3 { font-size: 24px; margin: 0 0 12px; }
+.deployment-panel p { color: var(--muted); max-width: 72ch; }
+.deployment-panel .btn { margin-top: 12px; }
+.deployment-review, .deployed-contracts { margin-top: 20px; padding: 20px; border: 1px solid var(--line); border-radius: 6px; overflow-wrap: anywhere; }
+.consent { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.consent input { width: 18px; height: 18px; }
+button:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+:focus-visible { outline: 2px solid #9abaff; outline-offset: 4px; }
+.topbar { background: #080b12; }
+.demo-notice { padding: 10px 22px; background: #101621; text-align: center; color: #adb9cf; font: 11px/1.7 var(--mono); }
+.form-note { line-height: 1.6; }
+@media (max-width: 620px) { .network-label { display: none; } .wallet-menu { width: 240px; } .deployment-review { padding: 14px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; } }

@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+  title: Orivex Protocol API
+  version: 0.1.0
+paths:
+  /register-agent:
+    post:
+      summary: Register an agent passport
+      responses:
+        '201': { description: Agent created }
+  /create-action:
+    post:
+      summary: Create an action claim
+      responses:
+        '201': { description: Action created }
+  /submit-evidence:
+    post:
+      summary: Attach evidence to an action
+      responses:
+        '202': { description: Evidence queued for validation }
+  /certificate/{id}:
+    get:
+      summary: Fetch a public certificate
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Certificate }
+  /agent/{id}/reputation:
+    get:
+      summary: Fetch capability reputation
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Reputation }

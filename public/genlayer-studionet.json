@@ -1,0 +1,48 @@
+{
+  "network": "studionet",
+  "chainId": 61999,
+  "rpc": "https://studio.genlayer.com/api",
+  "contract": "OrivexProofRegistry",
+  "address": "0xd8571C4605C3Fb63B02b75614a53d753656e66a1",
+  "deployer": "0x7a413BB4AB62E31d62d4cD9efC8C8a8Dae37FB42",
+  "deploymentTx": "0x0a3c55e513a05ef613851c3bd0f14e23d6ddf41d3abe52fb2801ec1e2910d56f",
+  "status": "FINALIZED",
+  "execution": "SUCCESS",
+  "sourceSha256": "4631a0e7932bec940d7b80ea041d9a5839ef1f48b2538e59bc9ce65bc2f74dd1",
+  "sourceMatchesCurrent": true,
+  "usableForProofs": true,
+  "smoke": {
+    "status": "SUCCESS",
+    "submitTx": "0x8d568222c879bb96645f215a9307355b4e38e30c4fa5810a2b14ab8de31ab551",
+    "verifyTx": "0x81daee774651a96b28dac878c6222833e445b3fd18bba8468755d10bb363032f",
+    "proof": {
+      "chain_id": 61999,
+      "claim": "The document permits redistribution of the software subject to keeping the copyright and permission notice.",
+      "contract_address": "0xd8571C4605C3Fb63B02b75614a53d753656e66a1",
+      "criterion": "SUCCESS if the license text explicitly grants distribution rights and requires preserving these notices.",
+      "domain": "orivex.evidence-proof.v2",
+      "evidence_sha256": "13cd784a6c31361f0e0c6aa3b410a1cb9a079868b7314c13e3eb8a75351746b9",
+      "evidence_url": "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/LICENSE",
+      "proof_hash": "ed4fffd33fa0ed3699d101401d3445c7668141d01ff87cd78a224a945693f335",
+      "proof_id": 1,
+      "reference_id": "smoke:openzeppelin-v5.4.0-license",
+      "schema_version": 2,
+      "status": "SUCCESS",
+      "submitter": "0x7a413BB4AB62E31d62d4cD9efC8C8a8Dae37FB42"
+    },
+    "consensus": {
+      "status": "FINALIZED",
+      "result": "MAJORITY_AGREE",
+      "votes": {
+        "0x14402D49f317CE1a2F35BAE01b1804A2A9703dCb": "agree",
+        "0x36728d2a123aB444E603EE5b2ad17d18Bb193557": "idle",
+        "0x3E5ee2507cc167C9925Bf10c67D7986581112024": "agree",
+        "0x5310dcF075E0BD47d29B8ec6581F736C767f54D2": "agree",
+        "0x6737ca1d6BDF8b7C4f19143E2D55581Ca64eb7C3": "idle"
+      },
+      "leaderOnly": false
+    },
+    "checkedAt": "2026-09-13T22:00:49.192Z"
+  },
+  "checkedAt": "2026-09-13T22:00:49.195Z"
+}

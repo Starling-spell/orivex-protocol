@@ -1,0 +1,58 @@
+{
+  "name": "orivex-protocol",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/compile-contracts.mjs",
+    "dev": "vite --host 127.0.0.1",
+    "build": "node scripts/compile-contracts.mjs && tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "contracts:build": "node scripts/compile-contracts.mjs",
+    "contracts:test": "node scripts/run-forge.mjs test",
+    "deploy:base-sepolia": "node scripts/deploy-base-sepolia.mjs",
+    "genlayer:lint": "node scripts/run-genlayer-lint.mjs",
+    "genlayer:test": "node scripts/run-genlayer-tests.mjs",
+    "genlayer:studio": "genlayer network set studionet",
+    "genlayer:examples": "node scripts/genlayer-examples-cli.mjs",
+    "genlayer:check": "node scripts/check-genlayer.mjs",
+    "genlayer:publish": "node scripts/publish-genlayer.mjs",
+    "pregenlayer:deploy": "npm run genlayer:lint && npm run genlayer:test",
+    "genlayer:deploy": "genlayer deploy",
+    "test": "vitest run"
+  },
+  "overrides": {
+    "solc": {
+      "tmp": "0.2.7"
+    },
+    "axios@^1.0.0": "1.18.0",
+    "ws@^8.0.0": "8.21.0"
+  },
+  "optionalDependencies": {
+    "@foundry-rs/forge-darwin-amd64": "1.7.1",
+    "@foundry-rs/forge-darwin-arm64": "1.7.1",
+    "@foundry-rs/forge-linux-amd64": "1.7.1",
+    "@foundry-rs/forge-linux-arm64": "1.7.1",
+    "@foundry-rs/forge-win32-amd64": "1.7.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "5.4.0",
+    "@privy-io/react-auth": "3.42.0",
+    "genlayer-js": "1.1.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "viem": "2.56.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "16.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "genlayer": "0.39.2",
+    "jsdom": "26.1.0",
+    "solc": "0.8.24",
+    "typescript": "5.9.3",
+    "vite": "7.3.6",
+    "vite-plugin-node-polyfills": "0.24.0",
+    "vitest": "3.2.7"
+  }
+}

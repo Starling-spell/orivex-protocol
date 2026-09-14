@@ -1,0 +1,10 @@
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+generator client { provider = "prisma-client-js" }
+model User { id String @id @default(cuid()); wallet Wallet?; organizations Organization[]; createdAt DateTime @default(now()) }
+model Wallet { id String @id @default(cuid()); address String @unique; userId String @unique; user User @relation(fields:[userId], references:[id]) }
+model Agent { id String @id @default(cuid()); chainId Int; contractId Int @unique; name String; ownerAddress String; metadataUri String; verified Boolean @default(false); createdAt DateTime @default(now()); actions Action[]; capabilities Capability[] }
+model Capability { id String @id @default(cuid()); name String; agentId String; agent Agent @relation(fields:[agentId], references:[id]); success Int @default(0); failed Int @default(0) }
+model Action { id String @id @default(cuid()); claim String; agentId String; agent Agent @relation(fields:[agentId], references:[id]); evidence Evidence[]; certificate Certificate?; createdAt DateTime @default(now()) }
+model Evidence { id String @id @default(cuid()); uri String; kind String; actionId String; action Action @relation(fields:[actionId], references:[id]) }
+model Certificate { id String @id @default(cuid()); chainId Int; txHash String?; status String; proofHash String?; actionId String @unique; action Action @relation(fields:[actionId], references:[id]) }
+model Organization { id String @id @default(cuid()); name String; ownerId String; owner User @relation(fields:[ownerId], references:[id]); agents Agent[] }

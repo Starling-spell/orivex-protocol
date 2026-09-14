@@ -1,0 +1,32 @@
+.agent-lab { font-size: 14px; line-height: 1.65; }
+#deploy { scroll-margin-top: 90px; padding-top: 54px; padding-bottom: 60px; }
+.lab-heading, .lab-proof-title { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.agent-lab h2 { margin: 8px 0 16px; font-size: clamp(30px, 4vw, 48px); }
+.agent-lab p, .agent-lab dt { color: var(--muted); }
+.agent-lab a { color: #aec8ff; overflow-wrap: anywhere; }
+.agent-lab .btn-primary { color: var(--bg); }
+.agent-lab .btn-ghost { color: var(--text); }
+.lab-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; }
+.lab-layout { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(0, 2.5fr); gap: 32px; border-top: 1px solid var(--line); padding-top: 24px; }
+.lab-list { display: flex; flex-direction: column; align-items: stretch; }
+.lab-list button { text-align: left; border: 0; border-bottom: 1px solid var(--line); color: var(--text); background: transparent; padding: 16px; font: inherit; cursor: pointer; }
+.lab-list button[aria-pressed="true"] { background: var(--surface2); }
+.lab-list span, .lab-list small { display: block; color: var(--muted); }
+.lab-list small { margin-top: 5px; font: 11px/1.6 var(--mono); }
+.lab-proof { min-width: 0; }
+.lab-proof h3 { font-size: 22px; margin: 0; }
+.lab-proof h4 { font-size: 13px; margin: 24px 0 4px; }
+.lab-proof p { margin-top: 4px; }
+.lab-proof dl { border-top: 1px solid var(--line); margin: 24px 0; padding-top: 12px; }
+.lab-proof dt { margin-top: 12px; font-size: 12px; }
+.lab-proof dd { margin: 2px 0; overflow-wrap: anywhere; font: 12px/1.8 var(--mono); }
+.proof-status { font: 11px/1.5 var(--mono); color: #dae2f4; }
+.status-success { color: #81e0b7; }
+.status-failed, .agent-lab .lab-error { color: #ffc2b7; }
+.status-inconclusive { color: #f4d68b; }
+.lab-message, .lab-error { padding-top: 12px; font-size: 13px; }
+.agent-lab details { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 12px; }
+.agent-lab summary { cursor: pointer; padding: 12px 0; min-height: 44px; }
+.agent-lab pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.8 var(--mono); }
+.agent-lab button, .lab-heading > a { min-height: 44px; }
+@media (max-width: 760px) { .lab-layout { grid-template-columns: 1fr; gap: 24px; } .lab-heading, .lab-proof-title { align-items: flex-start; flex-direction: column; gap: 8px; } }

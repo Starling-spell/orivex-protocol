@@ -10,7 +10,6 @@
     "preview": "vite preview --host 127.0.0.1",
     "contracts:build": "node scripts/compile-contracts.mjs",
     "contracts:test": "node scripts/run-forge.mjs test",
-    "deploy:base-sepolia": "node scripts/deploy-base-sepolia.mjs",
     "genlayer:lint": "node scripts/run-genlayer-lint.mjs",
     "genlayer:test": "node scripts/run-genlayer-tests.mjs",
     "genlayer:studio": "genlayer network set studionet",

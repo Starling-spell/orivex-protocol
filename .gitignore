@@ -16,3 +16,4 @@ broadcast
 .pytest_cache/
 __pycache__/
 *.zip
+.vercel-upload/

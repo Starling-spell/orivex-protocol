@@ -19,6 +19,8 @@ function AgentLab() {
   const [manual, setManual] = useState({ reference: '', claim: '', criterion: '', url: '', digest: '' });
   const [manualDigesting, setManualDigesting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [lookupId, setLookupId] = useState('');
+  const [lookingUp, setLookingUp] = useState(false);
   const smoke = { id: 'smoke', name: 'Document smoke proof', capability: 'Deployment verification', proofId: 1,
     verifyTx: manifest.smoke.verifyTx, proof: manifest.smoke.proof as Proof, checkedAt: manifest.checkedAt };
   const [examples, setExamples] = useState<Example[]>([smoke]);
@@ -42,27 +44,65 @@ function AgentLab() {
         validateProof(item.proof, manifest.address, item.proofId);
         if (await hash(canonicalProof(item.proof)) !== item.proof.proof_hash) throw new Error('Saved proof hash mismatch.');
       }
-      setExamples([smoke, ...records]);
-      setMessage(`${records.length} agent example receipts loaded. Select one, then recheck onchain.`);
+      const latest = await loadLatestOnchain(records.map((item: Example) => item.proofId));
+      setExamples(latest ? [smoke, ...records, latest] : [smoke, ...records]);
+      setMessage(latest
+        ? `${records.length} saved receipts loaded, plus live proof #${latest.proofId}. Select one, then recheck onchain.`
+        : `${records.length} agent example receipts loaded. Select one, then recheck onchain.`);
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not load examples.'); }
     finally { setLoading(false); }
+  }
+  async function readOnchainProof(id: number): Promise<Example> {
+    if (!Number.isSafeInteger(id) || id < 1) throw new Error('Enter a positive proof ID.');
+    const raw = await client.readContract({ address, functionName: 'get_proof', args: [id] });
+    const live: Proof = JSON.parse(String(raw));
+    validateProof(live, manifest.address, id);
+    if (await hash(canonicalProof(live)) !== live.proof_hash) throw new Error('Onchain proof hash mismatch.');
+    return { id: `onchain-${id}`, name: live.reference_id, capability: 'Onchain proof', proofId: id, verifyTx: '', proof: live, checkedAt: new Date().toISOString() };
+  }
+  async function loadLatestOnchain(knownIds: number[]) {
+    try {
+      const total = Number(await client.readContract({ address, functionName: 'total_proofs' }));
+      for (let id = total; id >= 1; id--) {
+        if (id === smoke.proofId || knownIds.includes(id)) continue;
+        try { return await readOnchainProof(id); } catch { /* Pending or invalid records are skipped. */ }
+      }
+    } catch { /* Saved receipts remain visible if StudioNet is unreachable. */ }
+    return undefined;
+  }
+  async function lookupProof() {
+    setLookingUp(true); setError('');
+    try {
+      const item = await readOnchainProof(Number(lookupId.trim()));
+      setExamples(items => [...items.filter(entry => entry.id !== item.id), item]);
+      setSelected(item.id);
+      setMessage(`Loaded proof #${item.proofId} from StudioNet (${item.proof?.status}).`);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not load that proof.'); }
+    finally { setLookingUp(false); }
   }
   async function recheck() {
     setChecking(true); setError(''); setMessage('Reading finalized state and consensus receipt…');
     try {
       const source = await client.getContractCode(address);
       if (await hash(typeof source === 'string' ? source : new TextDecoder().decode(source)) !== manifest.sourceSha256) throw new Error('The onchain source differs from this deployment.');
-      const receipt = await client.getTransaction({ hash: entry.verifyTx as Hash });
-      validateReceipt(receipt, manifest.address, manifest.deployer);
       const raw = await client.readContract({ address, functionName: 'get_proof', args: [entry.proofId] });
       const live: Proof = JSON.parse(String(raw));
       validateProof(live, manifest.address, entry.proofId);
-      const call = (receipt.data as { calldata?: { readable?: string } })?.calldata?.readable;
-      if (!call?.includes('"method":"verify_proof"') || !call.includes(`"args":[${entry.proofId},]`)) throw new Error('Receipt refers to a different proof.');
-      if (live.submitter.toLowerCase() !== manifest.deployer.toLowerCase() || await hash(canonicalProof(live)) !== live.proof_hash) throw new Error('Proof commitment or submitter mismatch.');
-      setExamples(items => items.map(item => item.id === entry.id ? { ...item, proof: live, checkedAt: new Date().toISOString(), consensus: { votes: receipt.consensus_data!.votes! } } : item));
-      setMessage('Live check passed: source, finalized consensus, submitter and proof commitment match. Evidence bytes can be rechecked with npm run genlayer:check.');
-    } catch (cause) { setError(cause instanceof Error && /differs|mismatch|invalid|Receipt|receipt/.test(cause.message) ? cause.message : 'StudioNet could not be checked. Saved receipt remains visible; retry or run npm run genlayer:check.'); setMessage('Live verification incomplete.'); }
+      if (await hash(canonicalProof(live)) !== live.proof_hash) throw new Error('Proof commitment mismatch.');
+      let votes: Record<string, string> | undefined;
+      if (entry.verifyTx) {
+        const receipt = await client.getTransaction({ hash: entry.verifyTx as Hash });
+        validateReceipt(receipt, manifest.address, manifest.deployer);
+        const call = (receipt.data as { calldata?: { readable?: string } })?.calldata?.readable;
+        if (!call?.includes('"method":"verify_proof"') || !call.includes(`"args":[${entry.proofId},]`)) throw new Error('Receipt refers to a different proof.');
+        if (live.submitter.toLowerCase() !== manifest.deployer.toLowerCase()) throw new Error('Proof submitter mismatch.');
+        votes = receipt.consensus_data!.votes!;
+      }
+      setExamples(items => items.map(item => item.id === entry.id ? { ...item, proof: live, checkedAt: new Date().toISOString(), consensus: votes ? { votes } : item.consensus } : item));
+      setMessage(entry.verifyTx
+        ? 'Live check passed: source, finalized consensus, submitter and proof commitment match. Evidence bytes can be rechecked with npm run genlayer:check.'
+        : 'Live proof loaded from StudioNet. Submit/verify receipts are not attached to this lookup.');
+    } catch (cause) { setError(cause instanceof Error && /differs|mismatch|invalid|Receipt|receipt|proof/i.test(cause.message) ? cause.message : 'StudioNet could not be checked. Saved receipt remains visible; retry or run npm run genlayer:check.'); setMessage('Live verification incomplete.'); }
     finally { setChecking(false); }
   }
   const votes = Object.values(entry.consensus?.votes ?? {});
@@ -87,7 +127,8 @@ function AgentLab() {
     <div className="lab-heading"><div><p>GenLayer StudioNet · Chain 61999</p><h2>Inspect an agent’s claim.</h2></div><a href="/docs/guide.html">Hackathon guide ↗</a></div>
     <p>Executable research and review agents submit claims against pinned public evidence. An intelligent contract records the validator-agreed judgment.</p>
     <div className="lab-actions"><button className="btn btn-primary" disabled={loading || checking} onClick={loadExamples}>{loading ? 'Loading receipts…' : 'Load agent examples'}</button><a className="btn btn-ghost" href="https://studio.genlayer.com" target="_blank" rel="noreferrer">Open GenLayer Studio ↗</a></div>
-    <section className="manual-proof card"><h3>Verify an agent manually</h3><p>Enter an externally acquired claim and immutable evidence. Validators fetch the evidence themselves; self-reported summaries are not accepted as proof.</p><div className="manual-grid"><label>Reference ID<input value={manual.reference} onChange={event => { setCopied(false); setManual({ ...manual, reference: event.target.value }); }} placeholder="agent-run-001" /></label><label>Claim<input value={manual.claim} onChange={event => setManual({ ...manual, claim: event.target.value })} placeholder="Agent completed the audit" /></label><label>Criterion<textarea value={manual.criterion} onChange={event => setManual({ ...manual, criterion: event.target.value })} placeholder="Evidence must show the completed audit and its result" /></label><label>Evidence URL<input value={manual.url} onChange={event => setManual({ ...manual, url: event.target.value })} placeholder="https://raw.githubusercontent.com/..." /></label><label>Evidence SHA-256<input value={manual.digest} onChange={event => setManual({ ...manual, digest: event.target.value })} placeholder="64 hex characters" /></label></div><div className="lab-actions"><button className="btn btn-ghost" disabled={!manual.url || manualDigesting} onClick={digestEvidence}>{manualDigesting ? 'Fetching evidence…' : 'Fetch and hash evidence'}</button><button className="btn btn-primary" disabled={!manualReady} onClick={copyCli}>{copied ? 'Copied CLI payload' : 'Copy CLI payload'}</button><a className="btn btn-ghost" href="/docs/guide.html#manual-verification">How to run these commands ↗</a></div>{manualReady ? <div className="cli-payload" id="cli-payload"><h4>CLI transaction payload</h4><pre><code>{cli}</code></pre><p>Stay on this page. Run the submit command with your StudioNet account, then replace <code>&lt;PROOF_ID&gt;</code> with the returned ID and run verify. The guide link only explains the steps; it does not generate the payload.</p></div> : <p className="lab-message">Fill every field and hash the evidence to generate the CLI payload here. The guide page does not contain your commands.</p>}</section>
+    <section className="manual-proof card"><h3>Verify an agent manually</h3><p>Enter an externally acquired claim and immutable evidence. Validators fetch the evidence themselves; self-reported summaries are not accepted as proof.</p><div className="manual-grid"><label>Reference ID<input value={manual.reference} onChange={event => { setCopied(false); setManual({ ...manual, reference: event.target.value }); }} placeholder="agent-run-001" /></label><label>Claim<input value={manual.claim} onChange={event => setManual({ ...manual, claim: event.target.value })} placeholder="Agent completed the audit" /></label><label>Criterion<textarea value={manual.criterion} onChange={event => setManual({ ...manual, criterion: event.target.value })} placeholder="Evidence must show the completed audit and its result" /></label><label>Evidence URL<input value={manual.url} onChange={event => setManual({ ...manual, url: event.target.value })} placeholder="https://raw.githubusercontent.com/..." /></label><label>Evidence SHA-256<input value={manual.digest} onChange={event => setManual({ ...manual, digest: event.target.value })} placeholder="64 hex characters" /></label></div><div className="lab-actions"><button className="btn btn-ghost" disabled={!manual.url || manualDigesting} onClick={digestEvidence}>{manualDigesting ? 'Fetching evidence…' : 'Fetch and hash evidence'}</button><button className="btn btn-primary" disabled={!manualReady} onClick={copyCli}>{copied ? 'Copied CLI payload' : 'Copy CLI payload'}</button><a className="btn btn-ghost" href="/docs/guide.html#manual-verification">How to run these commands ↗</a></div>{manualReady ? <div className="cli-payload" id="cli-payload"><h4>CLI transaction payload</h4><pre><code>{cli}</code></pre><p>These are real <code>genlayer write</code> commands. After submit, the receipt return value is the proof ID. Put that number in the verify command, then look the proof up below.</p></div> : <p className="lab-message">Fill every field and hash the evidence to generate runnable CLI commands here.</p>}
+      <div className="lab-actions lookup-row"><label>Onchain proof ID<input value={lookupId} onChange={event => setLookupId(event.target.value)} placeholder="7" inputMode="numeric" /></label><button className="btn btn-primary" disabled={lookingUp || checking || !lookupId.trim()} onClick={lookupProof}>{lookingUp ? 'Looking up…' : 'Look up proof'}</button></div></section>
     <div className="lab-layout"><div className="lab-list" aria-label="Agent examples">{examples.map(item => <button key={item.id} aria-pressed={entry.id === item.id} disabled={checking} onClick={() => { setSelected(item.id); setError(''); setMessage('Saved receipt. Recheck to read StudioNet now.'); }}><strong>{item.name}</strong><span>{item.capability}</span><small>{item.proof?.status ?? 'PENDING'} · #{item.proofId}</small></button>)}</div>
       <article className="lab-proof"><div className="lab-proof-title"><h3>{entry.name}</h3><span className={`proof-status status-${proof?.status.toLowerCase()}`}>{proof?.status ?? 'PENDING'}</span></div>
         {proof ? <><h4>Claim</h4><p>{proof.claim}</p><h4>Evaluation criterion</h4><p>{proof.criterion}</p><dl>

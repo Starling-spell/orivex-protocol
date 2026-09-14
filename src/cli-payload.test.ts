@@ -1,0 +1,15 @@
+import { expect, it } from 'vitest';
+import { cliPayload } from './cli';
+
+it('builds submit and verify commands on the lab page instead of sending users to the guide', () => {
+  const commands = cliPayload('0xd8571C4605C3Fb63B02b75614a53d753656e66a1', {
+    reference: 'orivex:manual:ownership-review:2026-09-14',
+    claim: 'The transferOwnership function can only be called by the current owner.',
+    criterion: 'SUCCESS if transferOwnership is restricted to the current owner.',
+    url: 'https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/contracts/access/Ownable.sol',
+    digest: '38578bd71c0a909840e67202db527cc6b4e6b437e0f39f0c909da32c1e30cb81',
+  });
+  expect(commands).toContain('submit_proof "orivex:manual:ownership-review:2026-09-14"');
+  expect(commands).toContain('verify_proof <PROOF_ID>');
+  expect(commands).not.toContain('/docs/guide.html');
+});

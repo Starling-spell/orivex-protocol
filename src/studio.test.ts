@@ -1,10 +1,17 @@
 import { expect, it } from 'vitest';
-import { proofIdFromReceipt, studioError, txHash } from './studio';
+import { parseProofId, proofIdFromReceipt, studioError, txHash } from './studio';
 
 it('reads the proof ID from a StudioNet submit receipt', () => {
   expect(proofIdFromReceipt({
     consensus_data: { leader_receipt: [{ mode: 'leader', result: { payload: { readable: '7' } } }] },
   })).toBe(7);
+});
+
+it('parses proof IDs from StudioNet return values', () => {
+  expect(parseProofId(7)).toBe(7);
+  expect(parseProofId('7')).toBe(7);
+  expect(parseProofId('"7"')).toBe(7);
+  expect(parseProofId(0)).toBeUndefined();
 });
 
 it('extracts a transaction hash from writeContract return values', () => {

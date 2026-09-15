@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from 'genlayer-js';
 import { studionet } from 'genlayer-js/chains';
-import { TransactionStatus, type Hash } from 'genlayer-js/types';
+import type { Hash } from 'genlayer-js/types';
 import { canonicalProof, validateProof, validateReceipt, type Proof } from './proof';
-import { proofIdFromReceipt, studioError, studioWalletWriter, txHash } from './studio';
+import { parseProofId, parseProofRecord, studioError, studioWalletWriter, txHash, waitUntil } from './studio';
 import manifest from '../deployments/genlayer-studionet.json';
 import './genlayer.css';
 
@@ -124,24 +124,29 @@ function AgentLab() {
         address, functionName: 'submit_proof', value: 0n, leaderOnly: false,
         args: [manual.reference, manual.claim, manual.criterion, manual.url, manual.digest.toLowerCase()],
       }));
-      setMessage('Claim submitted. Waiting for StudioNet to assign a proof ID…');
-      const submitted = await writer.waitForTransactionReceipt({ hash: submitTx, status: TransactionStatus.FINALIZED, interval: 4000, retries: 80 });
-      const id = proofIdFromReceipt(submitted);
+      setMessage('Claim submitted. Waiting for StudioNet to accept it and assign a proof ID…');
+      const id = await waitUntil('Timed out waiting for StudioNet to assign a proof ID.', async () => {
+        try {
+          return parseProofId(await client.readContract({ address, functionName: 'get_proof_id', args: [account, manual.reference] }));
+        } catch { return undefined; }
+      }, 40, 3000);
       setLookupId(String(id));
-      setMessage(`Proof #${id} submitted. Approve the verify transaction in your wallet. Validators will then fetch evidence and vote…`);
+      setMessage(`Proof #${id} is on-chain. Approve the verify transaction in your wallet…`);
       const verifyTx = txHash(await writer.writeContract({
         address, functionName: 'verify_proof', args: [id], value: 0n, leaderOnly: false,
       }));
-      const verified = await writer.waitForTransactionReceipt({ hash: verifyTx, status: TransactionStatus.FINALIZED, interval: 5000, retries: 80 });
-      validateReceipt(verified, address, account);
-      const raw = await client.readContract({ address, functionName: 'get_proof', args: [id] });
-      const live: Proof = JSON.parse(String(raw));
-      validateProof(live, address, id);
-      const votes = verified.consensus_data?.votes;
+      setMessage(`Proof #${id} sent for verification. Waiting for validator consensus…`);
+      const live = await waitUntil('Timed out waiting for validator consensus.', async () => {
+        try {
+          const proof = parseProofRecord(await client.readContract({ address, functionName: 'get_proof', args: [id] })) as Proof | undefined;
+          if (!proof || !['SUCCESS', 'FAILED', 'INCONCLUSIVE'].includes(proof.status) || !proof.proof_hash) return undefined;
+          validateProof(proof, address, id);
+          return proof;
+        } catch { return undefined; }
+      }, 80, 4000);
       const item: Example = {
         id: `onchain-${id}`, name: live.reference_id, capability: 'Live verification', proofId: id,
         verifyTx, proof: live, checkedAt: new Date().toISOString(),
-        consensus: votes ? { votes } : undefined,
       };
       setExamples(items => [...items.filter(entry => entry.id !== item.id), item]);
       setSelected(item.id);
@@ -156,7 +161,7 @@ function AgentLab() {
     <div className="lab-heading"><div><p>GenLayer StudioNet · Chain 61999</p><h2>Inspect an agent’s claim.</h2></div><a href="/docs/guide.html">Hackathon guide ↗</a></div>
     <p>Executable research and review agents submit claims against pinned public evidence. An intelligent contract records the validator-agreed judgment.</p>
     <div className="lab-actions"><button className="btn btn-primary" disabled={loading || checking} onClick={loadExamples}>{loading ? 'Loading receipts…' : 'Load agent examples'}</button><a className="btn btn-ghost" href="https://studio.genlayer.com" target="_blank" rel="noreferrer">Open GenLayer Studio ↗</a></div>
-    <section className="manual-proof card"><h3>Verify an agent manually</h3><p>Enter an externally acquired claim and immutable evidence. This page submits the proof to StudioNet, waits for validator consensus, and shows SUCCESS, FAILED, or INCONCLUSIVE here.</p><div className="manual-grid"><label>Reference ID<input value={manual.reference} onChange={event => setManual({ ...manual, reference: event.target.value })} placeholder="agent-run-001" /></label><label>Claim<input value={manual.claim} onChange={event => setManual({ ...manual, claim: event.target.value })} placeholder="Agent completed the audit" /></label><label>Criterion<textarea value={manual.criterion} onChange={event => setManual({ ...manual, criterion: event.target.value })} placeholder="Evidence must show the completed audit and its result" /></label><label>Evidence URL<input value={manual.url} onChange={event => setManual({ ...manual, url: event.target.value })} placeholder="https://raw.githubusercontent.com/..." /></label><label>Evidence SHA-256<input value={manual.digest} onChange={event => setManual({ ...manual, digest: event.target.value })} placeholder="64 hex characters" /></label></div><div className="lab-actions"><button className="btn btn-ghost" disabled={!manual.url || manualDigesting || verifying} onClick={digestEvidence}>{manualDigesting ? 'Fetching evidence…' : 'Fetch and hash evidence'}</button><button className="btn btn-primary" disabled={!manualReady || verifying} onClick={verifyOnchain}>{verifying ? 'Waiting for wallet…' : 'Verify'}</button></div>
+    <section className="manual-proof card"><h3>Verify an agent manually</h3><p>Enter an externally acquired claim and immutable evidence. This page submits the proof to StudioNet, waits for validator consensus, and shows SUCCESS, FAILED, or INCONCLUSIVE here.</p><div className="manual-grid"><label>Reference ID<input value={manual.reference} onChange={event => setManual({ ...manual, reference: event.target.value })} placeholder="agent-run-001" /></label><label>Claim<input value={manual.claim} onChange={event => setManual({ ...manual, claim: event.target.value })} placeholder="Agent completed the audit" /></label><label>Criterion<textarea value={manual.criterion} onChange={event => setManual({ ...manual, criterion: event.target.value })} placeholder="Evidence must show the completed audit and its result" /></label><label>Evidence URL<input value={manual.url} onChange={event => setManual({ ...manual, url: event.target.value })} placeholder="https://raw.githubusercontent.com/..." /></label><label>Evidence SHA-256<input value={manual.digest} onChange={event => setManual({ ...manual, digest: event.target.value })} placeholder="64 hex characters" /></label></div><div className="lab-actions"><button className="btn btn-ghost" disabled={!manual.url || manualDigesting || verifying} onClick={digestEvidence}>{manualDigesting ? 'Fetching evidence…' : 'Fetch and hash evidence'}</button><button className="btn btn-primary" disabled={!manualReady || verifying} onClick={verifyOnchain}>{verifying ? 'Verifying…' : 'Verify'}</button></div>
       <p className="lab-message" role="status">{verifying || message.includes('judged') || message.includes('did not finish') || message.includes('wallet') ? message : 'Hash the evidence, then click Verify. Approve the wallet transactions. The validator judgment appears in this page after consensus.'}</p>
       {error && <p className="lab-error" role="alert">{error}</p>}
       <div className="lab-actions lookup-row"><label>Onchain proof ID<input value={lookupId} onChange={event => setLookupId(event.target.value)} placeholder="7" inputMode="numeric" /></label><button className="btn btn-primary" disabled={lookingUp || checking || verifying || !lookupId.trim()} onClick={lookupProof}>{lookingUp ? 'Looking up…' : 'Look up proof'}</button></div></section>

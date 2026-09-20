@@ -265,7 +265,7 @@ export function WalletApp() {
   const deployPanel = <section className="deployment-panel" id="base-deploy">
     <h3>Base Sepolia deployment</h3>
     <p>Deploy the registry, action certificates, reputation and permissions in one transaction. Your connected wallet receives the admin roles.</p>
-    <p className="form-note">StudioNet evidence proofs are available in the agent lab. A bridge to finalize Base certificates is not configured.</p>
+    <p className="form-note">Studio Next evidence proofs are available in the agent lab. A bridge to finalize Base certificates is not configured.</p>
     {initializationSlow && <p role="alert" className="wallet-error">Privy initialization has not completed. Check the network and allowed origins, then use Retry connection in the header.</p>}
     {!account ? <button className="btn btn-primary" disabled={!available} onClick={connect}>Connect deployment wallet</button>
       : wrongChain ? <button className="btn btn-primary" disabled={switching || busy} onClick={switchNetwork}>{switching ? 'Switching…' : 'Switch to Base Sepolia'}</button>

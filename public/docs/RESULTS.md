@@ -1,3 +1,5 @@
+> Current reviewer path: [Studio Next 61997](STUDIO-NEXT.md), contract [0xdf47bC4B2AA10BDD3650acbE2f498FB4Acd550c8](https://explorer-studio-dev.genlayer.com/address/0xdf47bC4B2AA10BDD3650acbE2f498FB4Acd550c8), verified SUCCESS proof #1. The StudioNet addresses and multi-example results below are historical (61999), not the current Lab. Use the current runbook for commands.
+
 # Live StudioNet results
 
 Checked with the official CLI on 2026-09-13.

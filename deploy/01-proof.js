@@ -30,7 +30,7 @@ async function receipt(client, hash, directory) {
 }
 
 /** Official GenLayer CLI deploy-script hook. The CLI manages wallet signing. */
-export default async function deployProof(client) {
+async function deployProof(client) {
   if (process.env.ORIVEX_EXAMPLES_ONLY === '1') {
     return (await import('../scripts/run-genlayer-examples.mjs')).default(client);
   }
@@ -89,3 +89,5 @@ export default async function deployProof(client) {
   console.log(`Verified StudioNet proof contract: ${address}`);
   console.log(`Proof #1: ${proof_hash}`);
 }
+
+export { default } from "../scripts/deploy-studio-next.mjs";

@@ -1,5 +1,5 @@
 import { createClient } from 'genlayer-js';
-import { studionet } from 'genlayer-js/chains';
+import { studioDevnet } from 'genlayer-js/chains';
 import type { Hash } from 'genlayer-js/types';
 
 type EthereumProvider = { request(args: { method: string; params?: unknown[] }): Promise<unknown> };
@@ -23,8 +23,9 @@ export async function studioWalletWriter() {
     if (!accounts?.[0]) throw new Error('Connect a wallet first, then click Verify.');
     handle = { address: accounts[0], provider };
   }
-  const client = createClient({ chain: studionet, account: handle.address as `0x${string}`, provider: handle.provider });
-  try { await client.connect('studionet'); } catch { /* Wallet may already be on StudioNet or will prompt on the first transaction. */ }
+  const client = createClient({ chain: studioDevnet, account: handle.address as `0x${string}`, provider: handle.provider });
+  await ensureStudioNext(handle.provider);
+  if (Number(await client.getChainId()) !== 61997) throw new Error('Studio Next RPC returned the wrong chain.');
   return { account: handle.address, client };
 }
 
@@ -33,7 +34,7 @@ export function txHash(value: unknown): Hash {
     : value && typeof value === 'object' && 'hash' in value ? String((value as { hash: unknown }).hash)
     : value && typeof value === 'object' && 'tx_id' in value ? String((value as { tx_id: unknown }).tx_id)
     : '';
-  if (!/^0x[0-9a-f]{64}$/i.test(hash)) throw new Error('StudioNet did not return a transaction hash.');
+  if (!/^0x[0-9a-f]{64}$/i.test(hash)) throw new Error('Studio Next did not return a transaction hash.');
   return hash as Hash;
 }
 
@@ -79,14 +80,32 @@ export async function waitUntil<T>(label: string, attempt: () => Promise<T | und
 
 export function studioError(error: unknown): string {
   const text = error instanceof Error ? `${error.message} ${error.cause ?? ''}` : String(error);
-  if (/reference already submitted/i.test(text)) return 'This reference ID was already submitted from this StudioNet account. Use a new reference.';
+  if (/reference already submitted/i.test(text)) return 'This reference ID was already submitted from this Studio Next account. Use a new reference.';
   if (/evidence URL|allowlisted|pin a commit|canonical/i.test(text)) return 'Evidence URL must be HTTPS with a pinned GitHub commit or an IPFS CID.';
-  if (/429|32429|rate/i.test(text)) return 'StudioNet rate limit hit. Wait a minute, then verify again.';
-  if (/32028|in-flight/i.test(text)) return 'Too many pending StudioNet transactions. Wait for the previous proof to finish.';
-  if (/Timed out waiting for StudioNet to assign a proof ID/i.test(text)) return 'StudioNet accepted the wallet transaction but has not assigned a proof ID yet. Wait a few seconds and look the proof up, or verify again with a new reference.';
+  if (/429|32429|rate/i.test(text)) return 'Studio Next rate limit hit. Wait a minute, then verify again.';
+  if (/32028|in-flight/i.test(text)) return 'Too many pending Studio Next transactions. Wait for the previous proof to finish.';
+  if (/Timed out waiting for Studio Next to assign a proof ID/i.test(text)) return 'Studio Next accepted the wallet transaction but has not assigned a proof ID yet. Wait a few seconds and look the proof up, and inspect the saved transaction; do not submit a duplicate.';
   if (/Timed out waiting for validator consensus/i.test(text)) return 'The verify transaction was sent, but validators have not finalized a judgment yet. Look the proof up by ID in a minute.';
   if (/did not return a (transaction hash|proof ID)/i.test(text)) return text;
   if (/Connect a wallet/i.test(text)) return 'Connect a wallet first, then click Verify.';
-  if (/4001|UserRejected|denied|rejected/i.test(text)) return 'Wallet request declined. Approve the StudioNet transaction to verify.';
-  return 'StudioNet could not finish verification. Check the evidence URL and try again.';
+  if (/4001|UserRejected|denied|rejected/i.test(text)) return 'Wallet request declined. Approve the Studio Next transaction to verify.';
+  return 'Studio Next could not finish verification. Check the evidence URL and try again.';
+}
+
+export async function ensureStudioNext(provider: EthereumProvider) {
+  const chainId = '0xf22d';
+  if (Number(await provider.request({ method:'eth_chainId' })) !== 61997) {
+    try { await provider.request({ method:'wallet_switchEthereumChain', params:[{chainId}] }); }
+    catch (error) {
+      if ((error as {code?:number}).code !== 4902) throw error;
+      await provider.request({ method:'wallet_addEthereumChain', params:[{chainId,chainName:'GenLayer Studio Next',nativeCurrency:{name:'GEN',symbol:'GEN',decimals:18},rpcUrls:['https://studio-dev.genlayer.com/api'],blockExplorerUrls:['https://explorer-studio-dev.genlayer.com']}] });
+      await provider.request({ method:'wallet_switchEthereumChain', params:[{chainId}] });
+    }
+  }
+  if (Number(await provider.request({ method:'eth_chainId' })) !== 61997) throw new Error('Wallet must be on Studio Next (61997).');
+}
+
+export async function studioFees(client: ReturnType<typeof createClient>) {
+  const quote = await client.estimateTransactionFees({leaderTimeunitsAllocation:100n,validatorTimeunitsAllocation:200n,rotations:[3n],appealRounds:0n,totalMessageFees:0n});
+  return {distribution:quote.distribution,feeValue:quote.feeValue};
 }

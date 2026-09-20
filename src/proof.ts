@@ -12,7 +12,7 @@ export function canonicalProof(proof: Proof): string {
 }
 
 export function validateProof(proof: Proof, address: string, id: number): void {
-  if (proof.schema_version !== 2 || proof.domain !== 'orivex.evidence-proof.v2' || proof.chain_id !== 61999
+  if (proof.schema_version !== 2 || proof.domain !== 'orivex.evidence-proof.v2' || proof.chain_id !== 61997
       || proof.contract_address?.toLowerCase() !== address.toLowerCase() || proof.proof_id !== id
       || !Number.isSafeInteger(id) || id < 1
       || !/^0x[0-9a-f]{40}$/i.test(proof.submitter)
@@ -25,7 +25,7 @@ export function validateProof(proof: Proof, address: string, id: number): void {
 
 export function validateReceipt(receipt: any, address: string, sender?: string): void {
   const leaders = receipt.consensus_data?.leader_receipt;
-  if ((receipt.status_name !== 'FINALIZED' && receipt.status !== 7)
+  if (receipt.statusName !== 'FINALIZED' || receipt.txExecutionResultName !== 'FINISHED_WITH_RETURN'
       || receipt.leader_only !== false || receipt.result_name !== 'MAJORITY_AGREE'
       || receipt.to_address?.toLowerCase() !== address.toLowerCase()
       || (sender && receipt.from_address?.toLowerCase() !== sender.toLowerCase())

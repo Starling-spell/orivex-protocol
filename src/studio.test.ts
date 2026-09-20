@@ -24,3 +24,29 @@ it('maps StudioNet errors without exposing RPC internals', () => {
   expect(studioError(new Error('User rejected the request'))).toContain('Wallet request declined');
   expect(studioError({ shortMessage: '0xdeadbeef' })).not.toContain('0xdeadbeef');
 });
+
+it('switches a StudioNet wallet to Studio Next before signing', async () => {
+  const { ensureStudioNext } = await import('./studio');
+  let chain = '0xf22f';
+  const calls: string[] = [];
+  await ensureStudioNext({request: async ({method,params}) => {
+    calls.push(method);
+    if(method === 'eth_chainId') return chain;
+    if(method === 'wallet_switchEthereumChain') { chain = (params![0] as {chainId:string}).chainId; return null; }
+    throw new Error('Unexpected wallet request');
+  }});
+  expect(chain).toBe('0xf22d');
+  expect(calls).toContain('wallet_switchEthereumChain');
+});
+
+it('does not continue if the wallet stays on the old chain', async () => {
+  const { ensureStudioNext } = await import('./studio');
+  await expect(ensureStudioNext({request: async ({method}) => method === 'eth_chainId' ? '0xf22f' : null})).rejects.toThrow('61997');
+});
+
+it('includes both v0.6 fee fields from the live estimate', async () => {
+  const { studioFees } = await import('./studio');
+  const distribution = { test: 'distribution' };
+  const fake = {estimateTransactionFees: async () => ({distribution,feeValue:123n})};
+  expect(await studioFees(fake as any)).toEqual({distribution,feeValue:123n});
+});

@@ -50,26 +50,13 @@ npm run deploy:base-sepolia -- --account your-keystore-name --broadcast
 
 The first command estimates gas without sending. The broadcast command prompts through Foundry for the keystore password, verifies the owner and receipt, saves `deployments/base-sepolia.json`, and updates public addresses in `.env.local`. No private key is read by the application or passed as a command argument.
 
-## GenLayer StudioNet proofs
+## GenLayer Studio Next proofs
 
-`contracts/OrivexProofRegistry.py` targets StudioNet (chain ID 61999). It accepts a claim, criterion, immutable evidence URL and SHA-256 digest. `verify_proof` fetches the complete evidence and runs the same decision independently in validators; only an agreed `SUCCESS`, `FAILED` or `INCONCLUSIVE` result is persisted. The proof hash binds the contract, chain, submitter, claim, criterion, evidence and decision. References are scoped to the submitter.
+The Agent Lab now reads and writes on **chain 61997**, using the canonical studio-dev RPC and preview SDK. Contract: [0xdf47bC4B2AA10BDD3650acbE2f498FB4Acd550c8](https://explorer-studio-dev.genlayer.com/address/0xdf47bC4B2AA10BDD3650acbE2f498FB4Acd550c8). A real document claim completed submission and decentralized judgment with **SUCCESS**; all three transactions finalized successfully.
 
-The live StudioNet deployment is usable for proofs at `0xd8571C4605C3Fb63B02b75614a53d753656e66a1`. Smoke proof #1 and five varied agent examples have finalized consensus receipts; see [docs/RESULTS.md](docs/RESULTS.md).
+See [the current runbook and proof](docs/STUDIO-NEXT.md), [deployment manifest](deployments/genlayer-studio-next.json), and [live Lab](https://orivex-protocol.vercel.app/#deploy).
 
-```powershell
-python -m venv .venv-genlayer
-.\.venv-genlayer\Scripts\python.exe -m pip install -r requirements-genlayer.txt
-npm run genlayer:lint
-npm run genlayer:test
-npm run genlayer:studio
-# The dedicated account was created through the CLI; signing uses its OS keychain cache.
-npx --no-install genlayer account use studio-proof-deployer
-npm run genlayer:deploy
-```
-
-The CLI runs `deploy/01-proof.js`: deploy, wait for successful finalized execution, check source/schema, submit a real document proof, verify it through consensus, then reproduce its hash. Run `npm run genlayer:examples` for the five agent programs, `npm run genlayer:check` to validate receipts and commitments, and `npm run genlayer:publish` to copy evidence into the Vite app. It saves transaction journals under `artifacts/genlayer` and updates [deployments/genlayer-studionet.json](deployments/genlayer-studionet.json).
-
-StudioNet is gasless ([network reference](https://docs.genlayer.com/developers/networks)). Evidence must be UTF-8, 1–24000 bytes, served from an allowed IPFS gateway or raw GitHub URL with a full commit hash. A content hash commits to bytes; it does not establish a document's truth, agent identity or Base ownership. Claim and criterion are submitter supplied. No Base bridge, role grant, reputation update or automated certificate finalization is connected. The dedicated account is for this Studio development work; keep signing in the CLI/OS keychain and do not put keys in application configuration.
+The old StudioNet 61999 manifests and examples are historical only; they are not loaded by the current Lab. The protocol-fee estimate is included in every Studio Next write. Claims bind evidence bytes, criterion, signer, chain and contract; they do not establish agent identity or settle Base certificates.
 
 ## Build and checks
 
